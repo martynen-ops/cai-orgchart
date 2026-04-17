@@ -1377,19 +1377,29 @@ function esc(str) {
 }
 
 function showTooltip(e, d) {
-  const count = countDescendants(d);
+  const kids = d.children || d._children || [];
+  const direct = kids.length;
+  const total = countDescendants(d);
+  const indirect = total - direct;
   const imgUrl = STAFF_IMAGES[d.data.name];
   const name = esc(d.data.name);
   const title = esc(d.data.title);
   const photoHtml = imgUrl
     ? `<div class="tooltip-photo"><img src="${imgUrl}" alt="${name}" /></div>`
     : "";
+  let reportsHtml = "";
+  if (total > 0) {
+    const label = total === 1 ? "report" : "reports";
+    reportsHtml = indirect > 0
+      ? `<div class="tooltip-reports">${total} ${label} (${direct} direct + ${indirect} indirect)</div>`
+      : `<div class="tooltip-reports">${direct} direct ${label}</div>`;
+  }
   tooltip.innerHTML = `
     ${photoHtml}
     <div class="tooltip-name">${name}</div>
     <div class="tooltip-title">${title}</div>
     <span class="tooltip-dept" style="background:${DEPT_COLORS[d.data.dept]}">${DEPT_LABELS[d.data.dept]}</span>
-    ${count > 0 ? `<div class="tooltip-reports">${count} report${count !== 1 ? "s" : ""} (direct + indirect)</div>` : ""}
+    ${reportsHtml}
   `;
   tooltip.classList.add("visible");
   moveTooltip(e);
