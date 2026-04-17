@@ -1319,7 +1319,7 @@ function update(source) {
     if (imgUrl) {
       g.append("image")
         .attr("class", "node-avatar-img")
-        .attr("href", imgUrl)
+        .attr("href", displayImageUrl(imgUrl, 96))
         .attr("x", avatarCX - avatarR).attr("y", avatarCY - avatarR)
         .attr("width", avatarR * 2).attr("height", avatarR * 2)
         .attr("preserveAspectRatio", "xMidYMid slice")
@@ -1467,7 +1467,7 @@ function showTooltip(e, d) {
   const name = esc(d.data.name);
   const title = esc(d.data.title);
   const photoHtml = imgUrl
-    ? `<div class="tooltip-photo"><img src="${imgUrl}" alt="${name}" /></div>`
+    ? `<div class="tooltip-photo"><img src="${displayImageUrl(imgUrl, 160)}" alt="${name}" /></div>`
     : "";
   let reportsHtml = "";
   if (total > 0) {
@@ -1858,10 +1858,15 @@ initTheme();
 
 // --- PNG Export & Print ---
 const imageDataCache = {};
-function proxyImageUrl(url) {
+function proxyImageUrl(url, size) {
   if (url.startsWith("data:")) return url;
   const stripped = url.replace(/^https?:\/\//, "");
-  return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=160&h=160&fit=cover&output=jpg&q=82`;
+  const px = size || 160;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=${px}&h=${px}&fit=cover&output=jpg&q=82`;
+}
+function displayImageUrl(url, size) {
+  if (!url || url.startsWith("data:")) return url;
+  return proxyImageUrl(url, size);
 }
 function loadImage(src, useCors) {
   return new Promise((resolve, reject) => {
