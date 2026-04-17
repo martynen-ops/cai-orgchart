@@ -364,8 +364,8 @@
       bottom: 16px;
       left: 16px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      flex-wrap: nowrap;
+      gap: 12px;
       padding: 10px 14px;
       background: rgba(255,255,255,0.92);
       backdrop-filter: blur(12px);
@@ -373,7 +373,6 @@
       border-radius: 10px;
       box-shadow: 0 4px 16px rgba(13,24,35,0.06);
       z-index: 90;
-      max-width: 500px;
     }
     .legend-item {
       display: flex;
@@ -465,7 +464,7 @@
       .btn-text span { display: none; }
       .btn-text { padding: 0 10px; min-width: 44px; justify-content: center; }
       .minimap-container { display: none; }
-      .legend { max-width: calc(100vw - 16px); }
+      .legend { max-width: calc(100vw - 16px); flex-wrap: wrap; }
       #chart-container { padding-top: 100px; }
     }
   </style>
