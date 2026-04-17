@@ -1861,7 +1861,7 @@ const imageDataCache = {};
 function proxyImageUrl(url) {
   if (url.startsWith("data:")) return url;
   const stripped = url.replace(/^https?:\/\//, "");
-  return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&output=png`;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&w=160&h=160&fit=cover&output=jpg&q=82`;
 }
 function loadImage(src, useCors) {
   return new Promise((resolve, reject) => {
