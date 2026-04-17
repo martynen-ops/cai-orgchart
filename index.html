@@ -412,6 +412,71 @@
     }
     .minimap-node { transition: fill 200ms var(--ease); }
 
+    .focus-bar {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      z-index: 95;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 8px 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      font-family: var(--font);
+      opacity: 0;
+      transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+    }
+    .focus-bar.visible {
+      display: flex;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .focus-bar-label {
+      font-size: 12px;
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+    .focus-bar-label strong {
+      color: var(--text-1);
+      font-weight: 600;
+    }
+    .focus-bar .btn-text {
+      height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+    .focus-bar .btn-icon {
+      width: 32px;
+      height: 32px;
+    }
+    @media (max-width: 640px) {
+      .focus-bar {
+        top: auto;
+        bottom: 76px;
+        left: 8px;
+        right: 8px;
+        transform: none;
+        flex-wrap: wrap;
+      }
+      .focus-bar.visible { transform: none; }
+      .focus-bar-label { flex: 1 1 100%; }
+    }
+
+    .node-group.subtree-member .node-card {
+      stroke-width: 1.5;
+    }
+    .node-group.subtree-dim {
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .link.subtree-dim {
+      opacity: 0.08;
+    }
+
     .credit {
       position: fixed;
       bottom: 164px;
@@ -673,6 +738,21 @@
 </div>
 
 <div class="tooltip" id="tooltip"></div>
+
+<div class="focus-bar" id="focus-bar" role="region" aria-label="Focused team actions">
+  <div class="focus-bar-label"><strong id="focus-bar-name"></strong> <span id="focus-bar-count"></span></div>
+  <button type="button" class="btn-text" id="focus-print" title="Print this team">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <span>Print team</span>
+  </button>
+  <button type="button" class="btn-text" id="focus-png" title="Download this team as PNG">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>PNG team</span>
+  </button>
+  <button type="button" class="btn-icon" id="focus-clear" title="Clear focus" aria-label="Clear focus">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
 
 <div class="minimap-container" id="minimap-container"></div>
 
@@ -1555,6 +1635,7 @@ function selectSearchResult(idx) {
   clearHighlights();
   d.data._highlighted = true;
   expandPathTo(d);
+  showFocusBar(d);
   setTimeout(() => {
     zoomToNode(d);
     update(root);
@@ -1604,6 +1685,7 @@ function focusNode(d) {
   buildFlatList().forEach(n => { n.data._highlighted = false; });
   d.data._highlighted = true;
   update(d);
+  showFocusBar(d);
   setTimeout(() => {
     zoomToNode(d);
     setHashForNode(d);
@@ -1672,6 +1754,7 @@ function applyHash() {
       expandPathTo(d);
       clearHighlights();
       d.data._highlighted = true;
+      showFocusBar(d);
       update(d);
       setTimeout(() => zoomToNode(d), 200);
       return true;
@@ -1772,12 +1855,7 @@ themeBtn.addEventListener("click", () => {
 });
 initTheme();
 
-// --- Print ---
-document.getElementById("btn-print").addEventListener("click", () => {
-  window.print();
-});
-
-// --- PNG Export ---
+// --- PNG Export & Print ---
 function inlineSvgStyles(sourceSvg) {
   const clone = sourceSvg.cloneNode(true);
   const allEls = clone.querySelectorAll("*");
@@ -1800,103 +1878,218 @@ function inlineSvgStyles(sourceSvg) {
   });
   return clone;
 }
-document.getElementById("btn-export").addEventListener("click", async () => {
-  const btn = document.getElementById("btn-export");
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<span>Exporting…</span>`;
-  try {
-    const bounds = gMain.node().getBBox();
-    const pad = 40;
-    const w = Math.max(bounds.width + pad * 2, 600);
-    const h = Math.max(bounds.height + pad * 2, 400);
-    const scale = 2;
 
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-    const bg = isDark ? "#0B1220" : "#FFFFFF";
+function subtreeIds(rootNode) {
+  const ids = new Set();
+  function walk(n) {
+    ids.add(n.data._id);
+    (n.children || n._children || []).forEach(walk);
+  }
+  walk(rootNode);
+  return ids;
+}
 
-    const clone = inlineSvgStyles(svgEl.node());
-    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    clone.setAttribute("width", w);
-    clone.setAttribute("height", h);
-    clone.setAttribute("viewBox", `${bounds.x - pad} ${bounds.y - pad} ${w} ${h}`);
+function computeSubtreeBounds(rootNode) {
+  const ids = subtreeIds(rootNode);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  d3.selectAll(".node-group").each(function(d) {
+    if (!ids.has(d.data._id)) return;
+    const bb = this.getBBox();
+    const t = d3.select(this).attr("transform");
+    const m = t ? t.match(/translate\(([^,]+),([^)]+)\)/) : null;
+    const tx = m ? parseFloat(m[1]) : 0;
+    const ty = m ? parseFloat(m[2]) : 0;
+    minX = Math.min(minX, tx + bb.x);
+    minY = Math.min(minY, ty + bb.y);
+    maxX = Math.max(maxX, tx + bb.x + bb.width);
+    maxY = Math.max(maxY, ty + bb.y + bb.height);
+  });
+  if (!isFinite(minX)) return gMain.node().getBBox();
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
 
-    const gMainClone = clone.querySelector("g");
-    if (gMainClone) gMainClone.removeAttribute("transform");
+async function renderChartPng({ subtreeRoot } = {}) {
+  const bounds = subtreeRoot ? computeSubtreeBounds(subtreeRoot) : gMain.node().getBBox();
+  const pad = 40;
+  const w = Math.max(bounds.width + pad * 2, 600);
+  const h = Math.max(bounds.height + pad * 2, 400);
+  const scale = 2;
 
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const bg = isDark ? "#0B1220" : "#FFFFFF";
+
+  const clone = inlineSvgStyles(svgEl.node());
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("width", w);
+  clone.setAttribute("height", h);
+  clone.setAttribute("viewBox", `${bounds.x - pad} ${bounds.y - pad} ${w} ${h}`);
+
+  const gMainClone = clone.querySelector("g");
+  if (gMainClone) gMainClone.removeAttribute("transform");
+
+  if (subtreeRoot) {
+    const keep = subtreeIds(subtreeRoot);
+    clone.querySelectorAll(".node-group").forEach(g => {
+      const d = d3.select(g).datum();
+      if (!d || !keep.has(d.data._id)) g.remove();
+    });
+    clone.querySelectorAll(".link").forEach(l => {
+      const d = d3.select(l).datum();
+      if (!d || !keep.has(d.target.data._id)) l.remove();
+    });
+  } else {
     clone.querySelectorAll(".node-group.dept-dimmed").forEach(n => n.remove());
     clone.querySelectorAll(".link.dept-dimmed").forEach(n => n.remove());
-    clone.querySelectorAll(".node-avatar-img").forEach(n => n.remove());
-
-    clone.querySelectorAll(".node-group").forEach(g => {
-      if (g.querySelector(".node-avatar-fallback")) return;
-      const cp = g.querySelector("clipPath circle");
-      if (!cp) return;
-      const cx = cp.getAttribute("cx");
-      const cy = cp.getAttribute("cy");
-      const r = cp.getAttribute("r");
-      const nameEl = g.querySelector(".node-name");
-      const name = nameEl ? nameEl.textContent : "";
-      const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(s => s[0].toUpperCase()).join("");
-      const ns = "http://www.w3.org/2000/svg";
-      const c = document.createElementNS(ns, "circle");
-      c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
-      c.setAttribute("fill", "#E2E8F0");
-      c.setAttribute("stroke", "#CBD5E1");
-      g.insertBefore(c, g.querySelector(".node-avatar-ring") || null);
-      const t = document.createElementNS(ns, "text");
-      t.setAttribute("x", cx); t.setAttribute("y", cy);
-      t.setAttribute("text-anchor", "middle");
-      t.setAttribute("dominant-baseline", "central");
-      t.style.fontSize = "14px";
-      t.style.fontWeight = "600";
-      t.style.fill = "#64748B";
-      t.textContent = initials;
-      g.insertBefore(t, g.querySelector(".node-avatar-ring") || null);
-    });
-
-    const xml = new XMLSerializer().serializeToString(clone);
-    const svgBlob = new Blob([
-      '<?xml version="1.0" encoding="UTF-8"?>',
-      xml
-    ], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-
-    const img = new Image();
-    img.decoding = "sync";
-    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(w * scale);
-    canvas.height = Math.round(h * scale);
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    URL.revokeObjectURL(url);
-
-    const filterLabel = activeDepts.size === 6 ? "all" : ALL_DEPTS.filter(d => activeDepts.has(d)).join("-");
-    const dt = new Date().toISOString().slice(0,10);
-    const filename = `cai-orgchart-${filterLabel}-${dt}.png`;
-
-    canvas.toBlob(blob => {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        URL.revokeObjectURL(link.href);
-        link.remove();
-      }, 100);
-    }, "image/png");
-  } catch (err) {
-    console.error("Export failed:", err);
-    alert("Export failed. Try 'Print' and save as PDF instead.");
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = orig;
   }
+
+  clone.querySelectorAll(".node-avatar-img").forEach(n => n.remove());
+  clone.querySelectorAll(".node-group").forEach(g => {
+    if (g.querySelector(".node-avatar-fallback")) return;
+    const cp = g.querySelector("clipPath circle");
+    if (!cp) return;
+    const cx = cp.getAttribute("cx");
+    const cy = cp.getAttribute("cy");
+    const r = cp.getAttribute("r");
+    const nameEl = g.querySelector(".node-name");
+    const name = nameEl ? nameEl.textContent : "";
+    const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(s => s[0].toUpperCase()).join("");
+    const ns = "http://www.w3.org/2000/svg";
+    const c = document.createElementNS(ns, "circle");
+    c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
+    c.setAttribute("fill", "#E2E8F0");
+    c.setAttribute("stroke", "#CBD5E1");
+    g.insertBefore(c, g.querySelector(".node-avatar-ring") || null);
+    const t = document.createElementNS(ns, "text");
+    t.setAttribute("x", cx); t.setAttribute("y", cy);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("dominant-baseline", "central");
+    t.style.fontSize = "14px";
+    t.style.fontWeight = "600";
+    t.style.fill = "#64748B";
+    t.textContent = initials;
+    g.insertBefore(t, g.querySelector(".node-avatar-ring") || null);
+  });
+
+  const xml = new XMLSerializer().serializeToString(clone);
+  const svgBlob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>', xml], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.decoding = "sync";
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(w * scale);
+  canvas.height = Math.round(h * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  URL.revokeObjectURL(url);
+
+  return new Promise(resolve => canvas.toBlob(blob => resolve(blob), "image/png"));
+}
+
+function fileLabelForScope(subtreeRoot) {
+  if (subtreeRoot) return "team-" + slugify(subtreeRoot.data.name);
+  if (activeDepts.size < 6) return ALL_DEPTS.filter(d => activeDepts.has(d)).join("-");
+  return "all";
+}
+
+async function downloadPng(subtreeRoot) {
+  const blob = await renderChartPng({ subtreeRoot });
+  const dt = new Date().toISOString().slice(0,10);
+  const filename = `cai-orgchart-${fileLabelForScope(subtreeRoot)}-${dt}.png`;
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => { URL.revokeObjectURL(link.href); link.remove(); }, 100);
+}
+
+async function printScope(subtreeRoot) {
+  if (!subtreeRoot) {
+    window.print();
+    return;
+  }
+  const blob = await renderChartPng({ subtreeRoot });
+  const url = URL.createObjectURL(blob);
+  const title = `${subtreeRoot.data.name}'s team — CAI Org Chart`;
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("Please allow popups to print this team.");
+    URL.revokeObjectURL(url);
+    return;
+  }
+  win.document.write(`<!doctype html><html><head><title>${esc(title)}</title>
+    <style>
+      @page { size: landscape; margin: 0.5in; }
+      html, body { margin: 0; padding: 0; background: #fff; font-family: -apple-system, system-ui, sans-serif; }
+      .wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+      h1 { font-size: 16px; color: #0D1823; margin: 0 0 12px; font-weight: 600; }
+      img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; }
+      @media print { h1 { display: none; } .wrap { min-height: auto; padding: 0; } }
+    </style></head>
+    <body><div class="wrap"><h1>${esc(title)}</h1><img id="img" alt="${esc(title)}" /></div>
+    <script>
+      const img = document.getElementById('img');
+      img.onload = () => { setTimeout(() => { window.focus(); window.print(); }, 100); };
+      img.src = ${JSON.stringify(url)};
+      window.onafterprint = () => { try { URL.revokeObjectURL(${JSON.stringify(url)}); } catch(e){} window.close(); };
+    <\/script></body></html>`);
+  win.document.close();
+}
+
+async function runWithBusy(btn, fn) {
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span>Working…</span>`;
+  try { await fn(); }
+  catch (err) {
+    console.error("Export/print failed:", err);
+    alert("That didn't work. Try a different browser or use Print → Save as PDF.");
+  }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+
+document.getElementById("btn-print").addEventListener("click", () => printScope(null));
+document.getElementById("btn-export").addEventListener("click", (e) => {
+  runWithBusy(e.currentTarget, () => downloadPng(null));
+});
+
+// --- Focus bar (per-team print/export) ---
+const focusBar = document.getElementById("focus-bar");
+const focusBarName = document.getElementById("focus-bar-name");
+const focusBarCount = document.getElementById("focus-bar-count");
+let focusedNode = null;
+
+function showFocusBar(d) {
+  focusedNode = d;
+  const total = countDescendants(d);
+  focusBarName.textContent = d.data.name === "VACANCY" ? d.data.title : d.data.name;
+  focusBarCount.textContent = total > 0 ? `· ${total + 1} people` : "· 1 person";
+  focusBar.classList.add("visible");
+}
+function hideFocusBar() {
+  focusedNode = null;
+  focusBar.classList.remove("visible");
+}
+
+document.getElementById("focus-clear").addEventListener("click", () => {
+  clearHighlights();
+  hideFocusBar();
+  const cur = parseHash();
+  writeHash({ filter: cur.filter });
+  document.title = "CAI Org Chart — Center for Academic Innovation";
+});
+document.getElementById("focus-print").addEventListener("click", (e) => {
+  if (!focusedNode) return;
+  runWithBusy(e.currentTarget, () => printScope(focusedNode));
+});
+document.getElementById("focus-png").addEventListener("click", (e) => {
+  if (!focusedNode) return;
+  runWithBusy(e.currentTarget, () => downloadPng(focusedNode));
 });
 
 // Minimap
