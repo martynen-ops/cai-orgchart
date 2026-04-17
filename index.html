@@ -1929,13 +1929,21 @@ async function renderChartPng({ subtreeRoot } = {}) {
 
   if (subtreeRoot) {
     const keep = subtreeIds(subtreeRoot);
-    clone.querySelectorAll(".node-group").forEach(g => {
-      const d = d3.select(g).datum();
-      if (!d || !keep.has(d.data._id)) g.remove();
+    const realNodes = Array.from(svgEl.node().querySelectorAll(".node-group"));
+    const cloneNodes = Array.from(clone.querySelectorAll(".node-group"));
+    realNodes.forEach((real, i) => {
+      const d = d3.select(real).datum();
+      const cloneEl = cloneNodes[i];
+      if (!cloneEl) return;
+      if (!d || !keep.has(d.data._id)) cloneEl.remove();
     });
-    clone.querySelectorAll(".link").forEach(l => {
-      const d = d3.select(l).datum();
-      if (!d || !keep.has(d.target.data._id)) l.remove();
+    const realLinks = Array.from(svgEl.node().querySelectorAll(".link"));
+    const cloneLinks = Array.from(clone.querySelectorAll(".link"));
+    realLinks.forEach((real, i) => {
+      const d = d3.select(real).datum();
+      const cloneEl = cloneLinks[i];
+      if (!cloneEl) return;
+      if (!d || !keep.has(d.target.data._id)) cloneEl.remove();
     });
   } else {
     clone.querySelectorAll(".node-group.dept-dimmed").forEach(n => n.remove());
@@ -1996,7 +2004,22 @@ function fileLabelForScope(subtreeRoot) {
   return "all";
 }
 
+async function ensureSubtreeVisible(subtreeRoot) {
+  if (!subtreeRoot) return;
+  let changed = false;
+  function walk(d) {
+    if (d._children) { d.children = d._children; d._children = null; changed = true; }
+    if (d.children) d.children.forEach(walk);
+  }
+  walk(subtreeRoot);
+  if (changed) {
+    update(subtreeRoot);
+    await new Promise(res => setTimeout(res, 450));
+  }
+}
+
 async function downloadPng(subtreeRoot) {
+  await ensureSubtreeVisible(subtreeRoot);
   const blob = await renderChartPng({ subtreeRoot });
   const dt = new Date().toISOString().slice(0,10);
   const filename = `cai-orgchart-${fileLabelForScope(subtreeRoot)}-${dt}.png`;
@@ -2013,6 +2036,7 @@ async function printScope(subtreeRoot) {
     window.print();
     return;
   }
+  await ensureSubtreeVisible(subtreeRoot);
   const blob = await renderChartPng({ subtreeRoot });
   const url = URL.createObjectURL(blob);
   const title = `${subtreeRoot.data.name}'s team — CAI Org Chart`;
