@@ -1886,9 +1886,12 @@ async function imageToDataUrl(url) {
   };
   let data = null;
   try { data = await attempt(url); }
-  catch (_) {
+  catch (err1) {
     try { data = await attempt(proxyImageUrl(url)); }
-    catch (__) { data = null; }
+    catch (err2) {
+      console.warn("[export] image load failed:", url, err2);
+      data = null;
+    }
   }
   imageDataCache[url] = data;
   return data;
@@ -1958,6 +1961,7 @@ async function renderChartPng({ subtreeRoot } = {}) {
 
   const clone = inlineSvgStyles(svgEl.node());
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
   clone.setAttribute("width", w);
   clone.setAttribute("height", h);
   clone.setAttribute("viewBox", `${bounds.x - pad} ${bounds.y - pad} ${w} ${h}`);
@@ -2003,12 +2007,13 @@ async function renderChartPng({ subtreeRoot } = {}) {
     if (data) urlToData[u] = data;
   }));
 
+  const XLINK = "http://www.w3.org/1999/xlink";
   imageEls.forEach(el => {
-    const src = el.getAttribute("href") || el.getAttribute("xlink:href");
+    const src = el.getAttribute("href") || el.getAttributeNS(XLINK, "href");
     const data = urlToData[src];
     if (data) {
       el.setAttribute("href", data);
-      el.removeAttribute("xlink:href");
+      el.setAttributeNS(XLINK, "xlink:href", data);
     } else {
       el.remove();
     }
