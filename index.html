@@ -10,7 +10,7 @@
       --surface: #FFFFFF;
       --text-1: #0D1823;
       --text-2: #4A5568;
-      --text-3: #8896A6;
+      --text-3: #6B7B8D;
       --border: #E2E8F0;
       --link-color: #94A3B8;
 
@@ -108,6 +108,7 @@
       top: calc(100% + 4px);
       left: 0;
       width: 320px;
+      max-width: calc(100vw - 40px);
       max-height: 340px;
       overflow-y: auto;
       background: var(--surface);
@@ -198,6 +199,7 @@
     #chart-container svg {
       width: 100%;
       height: 100%;
+      touch-action: none;
     }
 
     .node-group { cursor: pointer; }
@@ -238,13 +240,6 @@
       font-family: var(--font);
     }
 
-    .node-badge {
-      font-size: 9px;
-      font-weight: 600;
-      fill: white;
-      font-family: var(--font);
-    }
-
     .node-count {
       font-size: 10px;
       font-weight: 600;
@@ -279,6 +274,21 @@
       stroke-opacity: 0.5;
     }
 
+    .node-avatar-img {
+      pointer-events: none;
+    }
+    .node-avatar-initials {
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font);
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+    .node-avatar-ring {
+      pointer-events: none;
+    }
+
     .vacancy .node-name {
       fill: var(--text-3);
       font-style: italic;
@@ -305,6 +315,20 @@
       stroke: var(--c-executive);
       stroke-width: 1.5;
     }
+
+    .credit {
+      position: fixed;
+      bottom: 164px;
+      right: 16px;
+      font-size: 11px;
+      color: var(--text-3);
+      opacity: 0.5;
+      z-index: 90;
+      font-family: var(--font);
+      letter-spacing: 0.01em;
+      transition: opacity 0.2s var(--ease);
+    }
+    .credit:hover { opacity: 1; }
 
     .legend {
       position: fixed;
@@ -345,11 +369,25 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       box-shadow: 0 8px 32px rgba(13,24,35,0.14);
-      padding: 14px 16px;
-      max-width: 280px;
+      padding: 14px 18px;
+      max-width: 300px;
       pointer-events: none;
+      text-align: center;
     }
     .tooltip.visible { display: block; }
+    .tooltip-photo {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 10px;
+    }
+    .tooltip-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
     .tooltip-name {
       font-size: 15px;
       font-weight: 700;
@@ -409,13 +447,13 @@
   <h1>Center for Academic Innovation</h1>
   <span class="subtitle">Full Team Org Chart</span>
   <div class="toolbar-spacer"></div>
-  <div class="search-wrap">
+  <div class="search-wrap" role="search">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
     <label for="search-box" class="sr-only">Search people</label>
-    <input type="text" id="search-box" placeholder="Search people… (press /)" autocomplete="off" />
-    <div class="search-results" id="search-results"></div>
+    <input type="text" id="search-box" placeholder="Search people… (press /)" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list" />
+    <div class="search-results" id="search-results" role="listbox"></div>
   </div>
   <div class="btn-group">
     <button class="btn-icon" id="btn-zoom-in" title="Zoom in" aria-label="Zoom in">
@@ -439,6 +477,8 @@
 </div>
 
 <div id="chart-container"></div>
+
+<div class="credit">Built by Marina Martynenko</div>
 
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:var(--c-executive)"></div>Executive</div>
@@ -560,9 +600,11 @@ const ORG_DATA = {
           children: [
             { name: "Eric Oblander", title: "Technical Production Specialist Senior", dept: "technology" },
             { name: "Daniel Joyce", title: "Media Solutions Engineer", dept: "technology" },
-            { name: "Chris Goosman", title: "Media Infrastructure Engineer Lead", dept: "technology" },
             { name: "Tim O'Brien", title: "Technical Innovation & Platforms Lead", dept: "technology" },
-            { name: "VACANCY", title: "DevOps Engineer", dept: "technology" }
+            { name: "VACANCY", title: "DevOps Engineer", dept: "technology" },
+            { name: "VACANCY", title: "Technical Program Manager", dept: "technology" },
+            { name: "Jessica VanFleteren", title: "Media Solutions Engineer", dept: "technology" },
+            { name: "VACANCY", title: "Infrastructure Analyst", dept: "technology" }
           ]
         },
         {
@@ -723,9 +765,114 @@ const DEPT_LABELS = {
   solutions: "Education Solutions"
 };
 
-const NODE_W = 220;
+const STAFF_IMAGES = {
+  "Aleks Marciniak": "https://ai.umich.edu/wp-content/uploads/2026/03/Marciniak_Aleks-sq.png",
+  "Alex Saya": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Alex-Saya.jpg",
+  "Alfredo Guevara": "https://ai.umich.edu/wp-content/uploads/2023/06/Alfredo-Guevara.jpg",
+  "Allie Krueger": "https://ai.umich.edu/wp-content/uploads/2024/06/Krueger_Allie_2024.jpg",
+  "Amanda Cowell": "https://ai.umich.edu/wp-content/uploads/2025/02/MPHOTO-CAI_StaffHdsJan2522_AmandaCowell.jpg",
+  "Ana Dora": "https://ai.umich.edu/wp-content/uploads/2024/06/Dora_Ana_2024.jpg",
+  "Andre Barbour": "https://ai.umich.edu/wp-content/uploads/2019/08/BarbourA.jpg",
+  "Angela Matthews": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Angela-Matthews.jpg",
+  "Angeline Boyes": "https://ai.umich.edu/wp-content/uploads/2024/06/Boyes_Angeline_2024.jpg",
+  "Ashim Shanker": "https://ai.umich.edu/wp-content/uploads/2026/03/Ashim-Shanker.png",
+  "Ashlee Wainright": "https://ai.umich.edu/wp-content/uploads/2024/06/Wainright_Ashlee_2024.jpg",
+  "Becky Matz": "https://ai.umich.edu/wp-content/uploads/2023/06/Becky-Matz.jpg",
+  "Ben Anderson": "https://ai.umich.edu/wp-content/uploads/2024/06/Anderson_Ben_2024.jpg",
+  "Ben Corona": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Ben-Corona.jpg",
+  "Briana Johnson": "https://ai.umich.edu/wp-content/uploads/2024/06/Johnson_Briana_2024.jpg",
+  "Carol Podschwadt": "https://ai.umich.edu/wp-content/uploads/2024/07/Podschwadt_Carol_2024.jpg",
+  "Caroline Damren": "https://ai.umich.edu/wp-content/uploads/2024/06/Damren_Caroline_2024-pdf.jpg",
+  "Catherine Persad": "https://ai.umich.edu/wp-content/uploads/2024/10/Catherine-Persad-Head-Shot.jpg",
+  "Charlyn David": "https://ai.umich.edu/wp-content/uploads/2026/03/MPHOTO_CAI_StaffHdsJan26_DC069-sq.png",
+  "Chelsea Williams": "https://ai.umich.edu/wp-content/uploads/2024/06/Williams_Chelsea_2024.jpg",
+  "Clare Brown": "https://ai.umich.edu/wp-content/uploads/2024/06/Brown_Clare_2024.jpg",
+  "Colleen Leh": "https://ai.umich.edu/wp-content/uploads/2024/06/Sullivan_Colleen_2024.jpg",
+  "Courtney Wagoner": "https://ai.umich.edu/wp-content/uploads/2026/03/Courtney-Wagoner.png",
+  "Crystal Cole": "https://ai.umich.edu/wp-content/uploads/2025/02/MPHOTO-CAI_StaffHdsJan2515_CrystalCole.jpg",
+  "Daniel Joyce": "https://ai.umich.edu/wp-content/uploads/2026/03/MPHOTO_CAI_StaffHdsJan26_DC081-sq.png",
+  "David Lawrence-Lupton": "https://ai.umich.edu/wp-content/uploads/2024/06/Lawrence-Lupton_David_2024.jpg",
+  "David Stone": "https://ai.umich.edu/wp-content/uploads/2024/06/Stone_David_2024.jpg",
+  "Dennis O'Reilly": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Dennis-O_Reilly.jpg",
+  "Eric Oblander": "https://ai.umich.edu/wp-content/uploads/2023/06/Eric-Oblander.jpg",
+  "Eric Schreffler": "https://ai.umich.edu/wp-content/uploads/2024/06/Schreffler_Eric_2024.jpg",
+  "Eric Shalayko": "https://ai.umich.edu/wp-content/uploads/2023/06/Eric-Shalayko.jpg",
+  "Evan Ogg Straub": "https://ai.umich.edu/wp-content/uploads/2023/06/Evan-Straub.jpg",
+  "Hedieh Najafi": "https://ai.umich.edu/wp-content/uploads/2023/06/Hedieh-Najafi.jpg",
+  "Henry Miller": "https://ai.umich.edu/wp-content/uploads/2025/02/MPHOTO-CAI_StaffHdsJan2533.jpg",
+  "Hongyun Theros": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Hongyun-Theros.jpg",
+  "Ian Tadashi Moore": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Ian-Moore.jpg",
+  "Jacob Aguinaga": "https://ai.umich.edu/wp-content/uploads/2024/06/Aguinaga_Jacob_2024-1.jpg",
+  "James Cleaver": "https://ai.umich.edu/wp-content/uploads/2023/06/James-Cleaver.jpg",
+  "James DeVaney": "https://ai.umich.edu/wp-content/uploads/2024/12/DeVaney-website-portrait-2024.jpg",
+  "James Tobias": "https://ai.umich.edu/wp-content/uploads/2024/06/Tobias_James_2024.jpeg",
+  "Jeff Butler": "https://ai.umich.edu/wp-content/uploads/2019/08/Butler-Jeffrey.jpg",
+  "Jeremy Nelson": "https://ai.umich.edu/wp-content/uploads/2019/10/400B8911.jpg",
+  "Jerry Anderfuren": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Jerry-Anderfuren.jpg",
+  "Jessica Wells": "https://ai.umich.edu/wp-content/uploads/2024/06/Wells_Jessica_2024.jpg",
+  "Jessie Krasa": "https://ai.umich.edu/wp-content/uploads/2026/03/Jessie-Krasa-sq.png",
+  "Jingcong Hu": "https://ai.umich.edu/wp-content/uploads/2026/03/Jingcong-Hu-sq.png",
+  "Julien Depauw": "https://ai.umich.edu/wp-content/uploads/2026/03/MPHOTO_CAI_StaffHdsJan26_DC048-sq.png",
+  "J'Vion Armstrong": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_JVion-Armstrong.jpg",
+  "Kameron Donald": "https://ai.umich.edu/wp-content/uploads/2023/06/Kameron-Donald-.jpg",
+  "Kristi Flexter": "https://ai.umich.edu/wp-content/uploads/2026/03/Kristi-Flexter-sq.png",
+  "Krystal Brauer": "https://ai.umich.edu/wp-content/uploads/2024/06/Brauer_Krystal_2024.jpg",
+  "Lyndsay Wing": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Lyndsay-Wing.jpg",
+  "Marina Martynenko": "https://ai.umich.edu/wp-content/uploads/2026/03/Marina-Martynenko-Headshot-sq.png",
+  "Mark Mills": "https://ai.umich.edu/wp-content/uploads/2024/06/Mills_Mark_2024.jpg",
+  "Matt Firsten": "https://ai.umich.edu/wp-content/uploads/2024/06/Firsten_Matt_2024.jpg",
+  "Maureen Breslin": "https://ai.umich.edu/wp-content/uploads/2024/06/Breslin_Maureen_2024.jpg",
+  "May Chang": "https://ai.umich.edu/wp-content/uploads/2026/03/May-Chang-sq.png",
+  "Melissa Wensman": "https://ai.umich.edu/wp-content/uploads/2024/06/Wensman_Melissa_2024.jpg",
+  "Micah Vanderhoof": "https://ai.umich.edu/wp-content/uploads/2024/06/Vanderhoof_Micah_2024.jpg",
+  "Michael Douglas": "https://ai.umich.edu/wp-content/uploads/2024/06/Douglas_Michael_2024.jpg",
+  "Michael Skib": "https://ai.umich.edu/wp-content/uploads/2019/08/skib-michael.jpg",
+  "Michael Wheeler": "https://ai.umich.edu/wp-content/uploads/2024/06/Wheeler_Michael_2024.jpg",
+  "Mike Daniel": "https://ai.umich.edu/wp-content/uploads/2024/06/Daniel_Mike_2024-1.jpg",
+  "Mindy Arbaugh": "https://ai.umich.edu/wp-content/uploads/2026/03/MPHOTO_CAI_StaffHdsJan26_DC034-sq.png",
+  "Moeezo Saleem": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Moeezo-Saleem.jpg",
+  "Nasreen Mahomed": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Nasreen-Mahomed.jpg",
+  "Nola Czarnik": "https://ai.umich.edu/wp-content/uploads/2024/06/Czarnik_Nola_2024.jpg",
+  "Pam Saca": "https://ai.umich.edu/wp-content/uploads/2023/06/Pam-Saca.jpg",
+  "Patrice Torcivia": "https://ai.umich.edu/wp-content/uploads/2026/03/MPHOTO_CAI_StaffHdsJan26_DC076-sq.png",
+  "Peter Arashiro": "https://ai.umich.edu/wp-content/uploads/2024/06/Arashiro_Peter_2024.jpg",
+  "Petra Adams": "https://ai.umich.edu/wp-content/uploads/2026/03/Petra-Adams-sq.png",
+  "Philip Harrell": "https://ai.umich.edu/wp-content/uploads/2024/06/Harrell_Philip_2024.jpg",
+  "Pooja Varma-Laughlin": "https://ai.umich.edu/wp-content/uploads/2024/07/Varma-Laughlin_Pooja_2024.jpg",
+  "Raven Lanier": "https://ai.umich.edu/wp-content/uploads/2024/06/Lanier_Raven_2024.jpg",
+  "Ray Majewski": "https://ai.umich.edu/wp-content/uploads/2023/06/Ray-Majewski.jpg",
+  "Ricky LaFosse": "https://ai.umich.edu/wp-content/uploads/2024/06/LaFosse_Ricky_2024.jpg",
+  "Robert Hess": "https://ai.umich.edu/wp-content/uploads/2022/05/CAI_Staff_Portraits_Robert-Hess.jpg",
+  "Roderick Simmons": "https://ai.umich.edu/wp-content/uploads/2024/06/Simmons_Roderick_2024.jpg",
+  "Sam Baldwin": "https://ai.umich.edu/wp-content/uploads/2023/06/Sam-Baldwin.jpg",
+  "Sarah Dysart": "https://ai.umich.edu/wp-content/uploads/2024/06/Dysart_Sarah_2024.jpg",
+  "Savanna Petersen": "https://ai.umich.edu/wp-content/uploads/2026/03/Savanna-Petersen-sq.png",
+  "Sean Corp": "https://ai.umich.edu/wp-content/uploads/2023/06/Sean-Corp.jpg",
+  "Sean Vucinich": "https://ai.umich.edu/wp-content/uploads/2023/06/Sean-Vucinich.jpg",
+  "Sophia Zhou": "https://ai.umich.edu/wp-content/uploads/2019/08/Zhou-Sophia.jpg",
+  "Suzanne Dove": "https://ai.umich.edu/wp-content/uploads/2026/03/Suzanne-Dove-sq.png",
+  "Thara Visvanathan": "https://ai.umich.edu/wp-content/uploads/2024/10/Thara-Visvanathan_headshot.jpg",
+  "Tim McMahon": "https://ai.umich.edu/wp-content/uploads/2024/06/McMahon_Tim_2024.jpg",
+  "Tim O'Brien": "https://ai.umich.edu/wp-content/uploads/2019/08/obrien-tim.jpg",
+  "Ursula LaFosse": "https://ai.umich.edu/wp-content/uploads/2024/06/LaFosse_Ursula_2024.jpg",
+  "Violet Gray": "https://ai.umich.edu/wp-content/uploads/2024/10/MPHOTO-CAI_StaffHdsJan2548.jpg",
+  "Wanlada Ault": "https://ai.umich.edu/wp-content/uploads/2024/06/Ault_Wanlada_2024.jpg",
+  "Weiyi Zhang": "https://ai.umich.edu/wp-content/uploads/2024/06/Zhang_Weiyi_2024.jpg",
+  "Whitney Bayer": "https://ai.umich.edu/wp-content/uploads/2024/06/Bayer_Whitney_2024.jpg",
+  "William Cleaves": "https://ai.umich.edu/wp-content/uploads/2024/06/Cleaves_William_2024.jpg",
+  "Yukti Mittal": "https://ai.umich.edu/wp-content/uploads/2024/06/Mittal_Yukti_2024.jpg",
+  "Yuting Luo": "https://ai.umich.edu/wp-content/uploads/2023/06/Yuting-Luo.jpg",
+};
+
+function getInitials(name) {
+  if (name === "VACANCY") return "?";
+  const parts = name.split(/\s+/);
+  if (parts.length === 1) return parts[0][0];
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const NODE_W = 260;
 const NODE_H = 64;
-const MARGIN = { top: 40, right: 60, bottom: 40, left: 60 };
 
 const container = document.getElementById("chart-container");
 const svgEl = d3.select(container).append("svg")
@@ -789,9 +936,6 @@ root.each(d => {
 const tooltip = document.getElementById("tooltip");
 const searchBox = document.getElementById("search-box");
 const searchResults = document.getElementById("search-results");
-
-let allNodes = [];
-root.each(d => allNodes.push(d));
 
 function countDescendants(d) {
   if (!d._children && !d.children) return 0;
@@ -860,10 +1004,18 @@ function update(source) {
     })
     .on("mouseenter", (e, d) => showTooltip(e, d))
     .on("mousemove", (e) => moveTooltip(e))
-    .on("mouseleave", hideTooltip);
+    .on("mouseleave", hideTooltip)
+    .on("touchstart", (e, d) => {
+      showTooltip(e.touches[0], d);
+      setTimeout(hideTooltip, 2500);
+    }, { passive: true });
 
   const halfW = NODE_W / 2;
   const halfH = NODE_H / 2;
+  const avatarR = 20;
+  const avatarCX = -halfW + 32;
+  const avatarCY = 0;
+  const textX = -halfW + 60;
 
   nodeEnter.append("rect")
     .attr("class", "node-card")
@@ -877,21 +1029,61 @@ function update(source) {
     .attr("fill", d => DEPT_COLORS[d.data.dept]);
 
   nodeEnter.append("clipPath")
-    .attr("id", d => `clip-accent-${d.data._id}`)
-    .append("rect")
-    .attr("x", -halfW).attr("y", -halfH)
-    .attr("width", 4).attr("height", NODE_H)
-    .attr("rx", 10).attr("ry", 10);
+    .attr("id", d => `clip-avatar-${d.data._id}`)
+    .append("circle")
+    .attr("cx", avatarCX).attr("cy", avatarCY).attr("r", avatarR);
+
+  function addAvatarFallback(g, d) {
+    g.append("circle")
+      .attr("class", "node-avatar-fallback")
+      .attr("cx", avatarCX).attr("cy", avatarCY).attr("r", avatarR)
+      .attr("fill", d.data.name === "VACANCY" ? "#E2E8F0" : DEPT_COLORS[d.data.dept] + "22")
+      .attr("stroke", d.data.name === "VACANCY" ? "#CBD5E1" : DEPT_COLORS[d.data.dept] + "44")
+      .attr("stroke-width", 1);
+    g.append("text")
+      .attr("class", "node-avatar-initials")
+      .attr("x", avatarCX).attr("y", avatarCY)
+      .attr("fill", d.data.name === "VACANCY" ? "#64748B" : DEPT_COLORS[d.data.dept])
+      .text(getInitials(d.data.name));
+  }
+
+  nodeEnter.each(function(d) {
+    const g = d3.select(this);
+    const imgUrl = STAFF_IMAGES[d.data.name];
+    if (imgUrl) {
+      g.append("image")
+        .attr("class", "node-avatar-img")
+        .attr("href", imgUrl)
+        .attr("x", avatarCX - avatarR).attr("y", avatarCY - avatarR)
+        .attr("width", avatarR * 2).attr("height", avatarR * 2)
+        .attr("preserveAspectRatio", "xMidYMid slice")
+        .attr("clip-path", `url(#clip-avatar-${d.data._id})`)
+        .on("error", function() {
+          d3.select(this).remove();
+          g.select(".node-avatar-ring").remove();
+          addAvatarFallback(g, d);
+        });
+    } else {
+      addAvatarFallback(g, d);
+    }
+  });
+
+  nodeEnter.append("circle")
+    .attr("class", "node-avatar-ring")
+    .attr("cx", avatarCX).attr("cy", avatarCY).attr("r", avatarR)
+    .attr("fill", "none")
+    .attr("stroke", d => STAFF_IMAGES[d.data.name] ? "#fff" : "none")
+    .attr("stroke-width", 2);
 
   nodeEnter.append("text")
     .attr("class", "node-name")
-    .attr("x", -halfW + 14).attr("y", -halfH + 24)
-    .text(d => truncate(d.data.name, 24));
+    .attr("x", textX).attr("y", -halfH + 24)
+    .text(d => truncate(d.data.name, 22));
 
   nodeEnter.append("text")
     .attr("class", "node-title")
-    .attr("x", -halfW + 14).attr("y", -halfH + 42)
-    .text(d => truncate(d.data.title, 30));
+    .attr("x", textX).attr("y", -halfH + 42)
+    .text(d => truncate(d.data.title, 28));
 
   nodeEnter.each(function(d) {
     const hasKids = d._children || d.children;
@@ -976,11 +1168,24 @@ function collapseToLevel(d, level) {
   if (d.children) d.children.forEach(c => collapseToLevel(c, level));
 }
 
+function esc(str) {
+  const el = document.createElement("span");
+  el.textContent = str;
+  return el.innerHTML;
+}
+
 function showTooltip(e, d) {
   const count = countDescendants(d);
+  const imgUrl = STAFF_IMAGES[d.data.name];
+  const name = esc(d.data.name);
+  const title = esc(d.data.title);
+  const photoHtml = imgUrl
+    ? `<div class="tooltip-photo"><img src="${imgUrl}" alt="${name}" /></div>`
+    : "";
   tooltip.innerHTML = `
-    <div class="tooltip-name">${d.data.name}</div>
-    <div class="tooltip-title">${d.data.title}</div>
+    ${photoHtml}
+    <div class="tooltip-name">${name}</div>
+    <div class="tooltip-title">${title}</div>
     <span class="tooltip-dept" style="background:${DEPT_COLORS[d.data.dept]}">${DEPT_LABELS[d.data.dept]}</span>
     ${count > 0 ? `<div class="tooltip-reports">${count} report${count !== 1 ? "s" : ""} (direct + indirect)</div>` : ""}
   `;
@@ -1064,6 +1269,7 @@ searchBox.addEventListener("input", () => {
   if (q.length < 2) {
     searchResults.classList.remove("visible");
     searchResults.innerHTML = "";
+    searchBox.setAttribute("aria-expanded", "false");
     clearHighlights();
     return;
   }
@@ -1077,16 +1283,18 @@ searchBox.addEventListener("input", () => {
   if (searchResultNodes.length === 0) {
     searchResults.innerHTML = `<div style="padding:14px;color:var(--text-3);font-size:13px;">No results found</div>`;
     searchResults.classList.add("visible");
+    searchBox.setAttribute("aria-expanded", "true");
     return;
   }
 
   searchResults.innerHTML = searchResultNodes.map((d, i) => `
-    <div class="search-result-item" data-idx="${i}">
+    <div class="search-result-item" role="option" id="search-opt-${i}" data-idx="${i}">
       <div class="sr-name">${highlightMatch(d.data.name, q)}</div>
       <div class="sr-title">${highlightMatch(d.data.title, q)}</div>
     </div>
   `).join("");
   searchResults.classList.add("visible");
+  searchBox.setAttribute("aria-expanded", "true");
 
   searchResults.querySelectorAll(".search-result-item").forEach(el => {
     el.addEventListener("click", () => {
@@ -1111,6 +1319,7 @@ searchBox.addEventListener("keydown", (e) => {
     selectSearchResult(activeResultIdx);
   } else if (e.key === "Escape") {
     searchResults.classList.remove("visible");
+    searchBox.setAttribute("aria-expanded", "false");
     searchBox.value = "";
     searchResultNodes = [];
     clearHighlights();
@@ -1121,8 +1330,11 @@ searchBox.addEventListener("keydown", (e) => {
 function updateActiveResult() {
   searchResults.querySelectorAll(".search-result-item").forEach((el, i) => {
     el.classList.toggle("active", i === activeResultIdx);
+    el.setAttribute("aria-selected", i === activeResultIdx ? "true" : "false");
     if (i === activeResultIdx) el.scrollIntoView({ block: "nearest" });
   });
+  searchBox.setAttribute("aria-activedescendant",
+    activeResultIdx >= 0 ? `search-opt-${activeResultIdx}` : "");
 }
 
 function selectSearchResult(idx) {
@@ -1135,6 +1347,7 @@ function selectSearchResult(idx) {
     update(root);
   }, 100);
   searchResults.classList.remove("visible");
+  searchBox.setAttribute("aria-expanded", "false");
 }
 
 function clearHighlights() {
@@ -1145,6 +1358,7 @@ function clearHighlights() {
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".search-wrap")) {
     searchResults.classList.remove("visible");
+    searchBox.setAttribute("aria-expanded", "false");
   }
 });
 
@@ -1218,8 +1432,10 @@ document.addEventListener("keydown", (e) => {
 update(root);
 setTimeout(fitToScreen, 100);
 
+let resizeTimer;
 window.addEventListener("resize", () => {
-  setTimeout(fitToScreen, 100);
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(fitToScreen, 150);
 });
 </script>
 </body>
