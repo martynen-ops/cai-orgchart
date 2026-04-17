@@ -1433,6 +1433,7 @@ function toggle(d) {
     d._children = null;
   }
   update(d);
+  if (typeof refreshFocusBarCount === "function") refreshFocusBarCount();
 }
 
 function expandAll(d) {
@@ -1862,8 +1863,8 @@ function inlineSvgStyles(sourceSvg) {
   const sourceEls = sourceSvg.querySelectorAll("*");
   const propsToCopy = [
     "fill","stroke","stroke-width","stroke-dasharray","stroke-opacity",
-    "opacity","font-size","font-weight","font-family","font-style",
-    "text-anchor","dominant-baseline","filter","rx","ry"
+    "fill-opacity","opacity","font-size","font-weight","font-family","font-style",
+    "text-anchor","dominant-baseline","rx","ry"
   ];
   sourceEls.forEach((el, i) => {
     const cs = getComputedStyle(el);
@@ -1871,9 +1872,9 @@ function inlineSvgStyles(sourceSvg) {
     if (!target) return;
     propsToCopy.forEach(p => {
       const v = cs.getPropertyValue(p);
-      if (v && v !== "none" && v !== "auto" && v !== "normal") {
-        target.style.setProperty(p, v);
-      }
+      if (!v) return;
+      if ((p === "opacity" || p === "fill-opacity" || p === "stroke-opacity") && v === "1") return;
+      target.style.setProperty(p, v);
     });
   });
   return clone;
@@ -1943,7 +1944,10 @@ async function renderChartPng({ subtreeRoot } = {}) {
       const d = d3.select(real).datum();
       const cloneEl = cloneLinks[i];
       if (!cloneEl) return;
-      if (!d || !keep.has(d.target.data._id)) cloneEl.remove();
+      const keepLink = d
+        && keep.has(d.source.data._id)
+        && keep.has(d.target.data._id);
+      if (!keepLink) cloneEl.remove();
     });
   } else {
     clone.querySelectorAll(".node-group.dept-dimmed").forEach(n => n.remove());
@@ -2004,22 +2008,7 @@ function fileLabelForScope(subtreeRoot) {
   return "all";
 }
 
-async function ensureSubtreeVisible(subtreeRoot) {
-  if (!subtreeRoot) return;
-  let changed = false;
-  function walk(d) {
-    if (d._children) { d.children = d._children; d._children = null; changed = true; }
-    if (d.children) d.children.forEach(walk);
-  }
-  walk(subtreeRoot);
-  if (changed) {
-    update(subtreeRoot);
-    await new Promise(res => setTimeout(res, 450));
-  }
-}
-
 async function downloadPng(subtreeRoot) {
-  await ensureSubtreeVisible(subtreeRoot);
   const blob = await renderChartPng({ subtreeRoot });
   const dt = new Date().toISOString().slice(0,10);
   const filename = `cai-orgchart-${fileLabelForScope(subtreeRoot)}-${dt}.png`;
@@ -2036,7 +2025,6 @@ async function printScope(subtreeRoot) {
     window.print();
     return;
   }
-  await ensureSubtreeVisible(subtreeRoot);
   const blob = await renderChartPng({ subtreeRoot });
   const url = URL.createObjectURL(blob);
   const title = `${subtreeRoot.data.name}'s team — CAI Org Chart`;
@@ -2088,11 +2076,24 @@ const focusBarName = document.getElementById("focus-bar-name");
 const focusBarCount = document.getElementById("focus-bar-count");
 let focusedNode = null;
 
+function countVisibleDescendants(d) {
+  if (!d.children) return 0;
+  let c = d.children.length;
+  d.children.forEach(ch => c += countVisibleDescendants(ch));
+  return c;
+}
+function refreshFocusBarCount() {
+  if (!focusedNode) return;
+  const visible = countVisibleDescendants(focusedNode) + 1;
+  const total = countDescendants(focusedNode) + 1;
+  focusBarCount.textContent = visible === total
+    ? `· ${visible} people`
+    : `· ${visible} of ${total} shown`;
+}
 function showFocusBar(d) {
   focusedNode = d;
-  const total = countDescendants(d);
   focusBarName.textContent = d.data.name === "VACANCY" ? d.data.title : d.data.name;
-  focusBarCount.textContent = total > 0 ? `· ${total + 1} people` : "· 1 person";
+  refreshFocusBarCount();
   focusBar.classList.add("visible");
 }
 function hideFocusBar() {
