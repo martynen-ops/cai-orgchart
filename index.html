@@ -1857,6 +1857,43 @@ themeBtn.addEventListener("click", () => {
 initTheme();
 
 // --- PNG Export & Print ---
+const imageDataCache = {};
+function proxyImageUrl(url) {
+  if (url.startsWith("data:")) return url;
+  const stripped = url.replace(/^https?:\/\//, "");
+  return `https://images.weserv.nl/?url=${encodeURIComponent(stripped)}&output=png`;
+}
+function loadImage(src, useCors) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (useCors) img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+async function imageToDataUrl(url) {
+  if (!url) return null;
+  if (imageDataCache[url] !== undefined) return imageDataCache[url];
+  const attempt = async (src) => {
+    const img = await loadImage(src, true);
+    const c = document.createElement("canvas");
+    c.width = img.naturalWidth || 256;
+    c.height = img.naturalHeight || 256;
+    const ctx = c.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    return c.toDataURL("image/png");
+  };
+  let data = null;
+  try { data = await attempt(url); }
+  catch (_) {
+    try { data = await attempt(proxyImageUrl(url)); }
+    catch (__) { data = null; }
+  }
+  imageDataCache[url] = data;
+  return data;
+}
+
 function inlineSvgStyles(sourceSvg) {
   const clone = sourceSvg.cloneNode(true);
   const allEls = clone.querySelectorAll("*");
@@ -1954,8 +1991,31 @@ async function renderChartPng({ subtreeRoot } = {}) {
     clone.querySelectorAll(".link.dept-dimmed").forEach(n => n.remove());
   }
 
-  clone.querySelectorAll(".node-avatar-img").forEach(n => n.remove());
+  const imageEls = Array.from(clone.querySelectorAll(".node-avatar-img"));
+  const uniqueUrls = Array.from(new Set(
+    imageEls
+      .map(el => el.getAttribute("href") || el.getAttribute("xlink:href"))
+      .filter(Boolean)
+  ));
+  const urlToData = {};
+  await Promise.all(uniqueUrls.map(async u => {
+    const data = await imageToDataUrl(u);
+    if (data) urlToData[u] = data;
+  }));
+
+  imageEls.forEach(el => {
+    const src = el.getAttribute("href") || el.getAttribute("xlink:href");
+    const data = urlToData[src];
+    if (data) {
+      el.setAttribute("href", data);
+      el.removeAttribute("xlink:href");
+    } else {
+      el.remove();
+    }
+  });
+
   clone.querySelectorAll(".node-group").forEach(g => {
+    if (g.querySelector(".node-avatar-img")) return;
     if (g.querySelector(".node-avatar-fallback")) return;
     const cp = g.querySelector("clipPath circle");
     if (!cp) return;
