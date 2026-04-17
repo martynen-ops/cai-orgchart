@@ -410,6 +410,7 @@
       stroke: var(--c-executive);
       stroke-width: 1.5;
     }
+    .minimap-node { transition: fill 200ms var(--ease); }
 
     .credit {
       position: fixed;
@@ -1917,15 +1918,26 @@ function updateMinimap() {
   gMini.attr("transform", `translate(${tx},${ty}) scale(${scale})`);
 
   const allN = root.descendants();
+  const isFiltered = activeDepts.size < 6;
+  const neutralColor = getComputedStyle(document.documentElement).getPropertyValue("--text-3").trim() || "#6B7B8D";
+  const dimColor = getComputedStyle(document.documentElement).getPropertyValue("--border").trim() || "#E2E8F0";
   const dots = gMiniNodes.selectAll("rect").data(allN, d => d.data._id);
   dots.exit().remove();
   dots.enter().append("rect")
+    .attr("class", "minimap-node")
     .attr("width", 8 / scale).attr("height", 4 / scale)
     .attr("rx", 2 / scale)
     .merge(dots)
     .attr("x", d => d.x - 4 / scale)
     .attr("y", d => d.y - 2 / scale)
-    .attr("fill", d => DEPT_COLORS[d.data.dept]);
+    .attr("fill", d => {
+      if (!isFiltered) return neutralColor;
+      return activeDepts.has(d.data.dept) ? DEPT_COLORS[d.data.dept] : dimColor;
+    })
+    .attr("fill-opacity", d => {
+      if (!isFiltered) return 0.55;
+      return activeDepts.has(d.data.dept) ? 0.9 : 0.35;
+    });
 
   const t = d3.zoomTransform(svgEl.node());
   const cw = container.clientWidth;
