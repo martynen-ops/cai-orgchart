@@ -8,12 +8,18 @@ Interactive organizational chart for the **Center for Academic Innovation** at t
 
 ## Features
 
-- **Interactive tree layout** — click any node to expand/collapse its team
-- **Search** — keyboard shortcut `/` to focus search, arrow keys to navigate results
-- **Pan & zoom** — drag to pan, scroll/pinch to zoom, plus zoom buttons
+- **Focus-on-click** — clicking a person expands their team and pans/zooms to center them; click the `+/−` below a card to expand/collapse without moving
+- **Shareable deep links** — the URL updates as you focus someone (e.g. `…/#marina-martynenko`) so you can paste it straight into Slack or email
+- **Department filters** — click any color in the legend to toggle that department; shift-click to solo; click **All** to reset. The filter is also reflected in the URL (`#filter=technology,learning`)
+- **Search** — press `/` to focus the box, arrow keys + Enter to jump to a person
+- **Headcount at a glance** — toolbar shows `N people · M open` (updates when filtered)
+- **Dark mode** — toggle in the toolbar; respects your system preference; choice is remembered
+- **Print / Save as PDF** — Print button opens the browser print dialog with a clean landscape layout
+- **PNG export** — downloads the current (possibly filtered) view as a high-resolution PNG
+- **Pan & zoom** — drag to pan, Ctrl/⌘+scroll or pinch to zoom, plus toolbar buttons
 - **Minimap** — bottom-right overview with draggable viewport
-- **Color-coded departments** — Executive, Learning, Technology, Operations, Marketing, Education Solutions
 - **Tooltips on hover** — shows photo, title, department, and report count
+- **Distinct vacancy styling** — open roles render with a dashed border and muted color
 - **Fully responsive** — works on desktop, tablet, and mobile
 - **Accessible** — keyboard navigable, ARIA roles, WCAG AA contrast
 - **Self-contained** — single HTML file, no build step, no server required

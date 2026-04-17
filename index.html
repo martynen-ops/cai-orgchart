@@ -37,11 +37,17 @@
     :root {
       --bg: #F4F6F9;
       --surface: #FFFFFF;
+      --surface-2: #F8FAFC;
       --text-1: #0D1823;
       --text-2: #4A5568;
       --text-3: #6B7B8D;
       --border: #E2E8F0;
       --link-color: #94A3B8;
+      --hover-bg: #EEF2FF;
+      --hover-border: #C7D2FE;
+      --toolbar-bg: rgba(244,246,249,0.85);
+      --legend-bg: rgba(255,255,255,0.92);
+      --search-hit: #F0F4FF;
 
       --c-executive: #6366F1;
       --c-learning: #0EA5E9;
@@ -52,6 +58,22 @@
 
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       --ease: cubic-bezier(.4,0,.2,1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0B1220;
+      --surface: #1A2435;
+      --surface-2: #131C2B;
+      --text-1: #F1F5F9;
+      --text-2: #CBD5E1;
+      --text-3: #94A3B8;
+      --border: #2B394F;
+      --link-color: #475569;
+      --hover-bg: #1E2A44;
+      --hover-border: #3B4B6B;
+      --toolbar-bg: rgba(11,18,32,0.85);
+      --legend-bg: rgba(26,36,53,0.92);
+      --search-hit: #1E2A44;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -79,10 +101,25 @@
       align-items: center;
       gap: 12px;
       padding: 12px 20px;
-      background: rgba(244,246,249,0.85);
+      background: var(--toolbar-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
+    }
+
+    .toolbar-stat {
+      font-size: 11px;
+      color: var(--text-3);
+      white-space: nowrap;
+      padding: 4px 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .toolbar-stat strong {
+      color: var(--text-1);
+      font-weight: 600;
     }
 
     #toolbar h1 {
@@ -155,7 +192,7 @@
     }
     .search-result-item:last-child { border-bottom: none; }
     .search-result-item:hover, .search-result-item.active {
-      background: #F0F4FF;
+      background: var(--search-hit);
     }
     .search-result-item .sr-name {
       font-size: 14px;
@@ -192,7 +229,12 @@
       color: var(--text-2);
       transition: all 150ms var(--ease);
     }
-    .btn-icon:hover { background: #EEF2FF; color: var(--c-executive); border-color: #C7D2FE; }
+    .btn-icon:hover { background: var(--hover-bg); color: var(--c-executive); border-color: var(--hover-border); }
+    .btn-icon.active {
+      background: var(--hover-bg);
+      color: var(--c-executive);
+      border-color: var(--hover-border);
+    }
     .btn-icon:active { transform: scale(0.95); }
     .btn-icon:focus-visible, .btn-text:focus-visible {
       outline: 2px solid var(--c-executive);
@@ -216,7 +258,7 @@
       white-space: nowrap;
       transition: all 150ms var(--ease);
     }
-    .btn-text:hover { background: #EEF2FF; color: var(--c-executive); border-color: #C7D2FE; }
+    .btn-text:hover { background: var(--hover-bg); color: var(--c-executive); border-color: var(--hover-border); }
     .btn-text:active { transform: scale(0.97); }
 
     #chart-container {
@@ -318,9 +360,33 @@
       pointer-events: none;
     }
 
+    .vacancy .node-card {
+      stroke-dasharray: 5, 4;
+      stroke: var(--text-3);
+      stroke-opacity: 0.6;
+      fill: var(--surface-2);
+    }
+    .vacancy .node-accent {
+      opacity: 0.35;
+    }
     .vacancy .node-name {
       fill: var(--text-3);
       font-style: italic;
+    }
+    .vacancy .node-title {
+      fill: var(--text-3);
+      font-style: italic;
+    }
+
+    .node-group.dept-dimmed {
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .node-group.dept-dimmed .node-card {
+      filter: none;
+    }
+    .link.dept-dimmed {
+      opacity: 0.08;
     }
 
     .minimap-container {
@@ -332,7 +398,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(13,24,35,0.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
       overflow: hidden;
       z-index: 90;
     }
@@ -365,14 +431,15 @@
       left: 16px;
       display: flex;
       flex-wrap: nowrap;
-      gap: 12px;
-      padding: 10px 14px;
-      background: rgba(255,255,255,0.92);
+      gap: 4px;
+      padding: 6px;
+      background: var(--legend-bg);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(13,24,35,0.06);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
       z-index: 90;
+      align-items: center;
     }
     .legend-item {
       display: flex;
@@ -382,11 +449,57 @@
       font-weight: 500;
       color: var(--text-2);
       white-space: nowrap;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 150ms var(--ease);
+      user-select: none;
+    }
+    .legend-item:hover {
+      background: var(--hover-bg);
+      border-color: var(--hover-border);
+    }
+    .legend-item:focus-visible {
+      outline: 2px solid var(--c-executive);
+      outline-offset: 2px;
+    }
+    .legend-item.inactive {
+      opacity: 0.45;
+    }
+    .legend-item.inactive .legend-dot {
+      filter: grayscale(0.6);
+    }
+    .legend-sep {
+      width: 1px;
+      align-self: stretch;
+      background: var(--border);
+      margin: 4px 2px;
+    }
+    .legend-reset {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-3);
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 150ms var(--ease);
+    }
+    .legend-reset:hover {
+      background: var(--hover-bg);
+      color: var(--c-executive);
+      border-color: var(--hover-border);
     }
     .legend-dot {
       width: 10px;
       height: 10px;
       border-radius: 3px;
+      transition: filter 150ms var(--ease);
     }
 
     .tooltip {
@@ -396,11 +509,12 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      box-shadow: 0 8px 32px rgba(13,24,35,0.14);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
       padding: 14px 18px;
       max-width: 300px;
       pointer-events: none;
       text-align: center;
+      color: var(--text-1);
     }
     .tooltip.visible { display: block; }
     .tooltip-photo {
@@ -448,8 +562,9 @@
       #toolbar { padding: 10px 12px; gap: 8px; }
       #toolbar h1 { font-size: 13px; }
       #toolbar .subtitle { display: none; }
+      .toolbar-stat { display: none; }
       #search-box { width: 180px; font-size: 16px; }
-      .legend { bottom: 8px; left: 8px; padding: 8px 10px; }
+      .legend { bottom: 8px; left: 8px; padding: 4px; }
       .minimap-container { width: 150px; height: 100px; }
     }
 
@@ -464,8 +579,32 @@
       .btn-text span { display: none; }
       .btn-text { padding: 0 10px; min-width: 44px; justify-content: center; }
       .minimap-container { display: none; }
+      .credit { display: none; }
       .legend { max-width: calc(100vw - 16px); flex-wrap: wrap; }
       #chart-container { padding-top: 100px; }
+    }
+
+    @media print {
+      html, body { overflow: visible !important; height: auto !important; background: #fff !important; }
+      #toolbar, .minimap-container, .tooltip, .search-results, .credit { display: none !important; }
+      #chart-container { padding-top: 0 !important; height: auto !important; }
+      .legend {
+        position: static;
+        display: flex;
+        margin: 0 0 12px 0;
+        box-shadow: none;
+        background: #fff;
+        page-break-inside: avoid;
+      }
+      .legend-item { cursor: default; }
+      #chart-container svg {
+        width: 100% !important;
+        height: auto !important;
+        display: block;
+        overflow: visible;
+      }
+      .node-card { filter: none !important; }
+      @page { size: landscape; margin: 1cm; }
     }
   </style>
 </head>
@@ -480,7 +619,7 @@
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
     <label for="search-box" class="sr-only">Search people</label>
-    <input type="text" id="search-box" placeholder="Search people… (press /)" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list" />
+    <input type="text" id="search-box" placeholder="Search people…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list" aria-keyshortcuts="/" />
     <div class="search-results" id="search-results" role="listbox"></div>
   </div>
   <div class="btn-group">
@@ -502,19 +641,34 @@
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
     <span>Collapse</span>
   </button>
+  <button class="btn-text" id="btn-print" aria-label="Print or save as PDF" title="Print or save as PDF">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <span>Print</span>
+  </button>
+  <button class="btn-text" id="btn-export" aria-label="Export as image" title="Download current view as PNG">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span>PNG</span>
+  </button>
+  <div class="toolbar-stat" id="headcount"><strong>0</strong> people</div>
+  <button class="btn-icon" id="btn-theme" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+  </button>
 </div>
 
 <div id="chart-container"></div>
 
 <div class="credit">Built by Marina Martynenko</div>
 
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:var(--c-executive)"></div>Executive</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--c-learning)"></div>Learning</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--c-technology)"></div>Technology</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--c-operations)"></div>Operations</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--c-marketing)"></div>Marketing</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--c-solutions)"></div>Education Solutions</div>
+<div class="legend" role="group" aria-label="Filter by department. Click to toggle, shift-click to solo.">
+  <button type="button" class="legend-item" data-dept="executive" aria-pressed="true"><span class="legend-dot" style="background:var(--c-executive)"></span>Executive</button>
+  <button type="button" class="legend-item" data-dept="learning" aria-pressed="true"><span class="legend-dot" style="background:var(--c-learning)"></span>Learning</button>
+  <button type="button" class="legend-item" data-dept="technology" aria-pressed="true"><span class="legend-dot" style="background:var(--c-technology)"></span>Technology</button>
+  <button type="button" class="legend-item" data-dept="operations" aria-pressed="true"><span class="legend-dot" style="background:var(--c-operations)"></span>Operations</button>
+  <button type="button" class="legend-item" data-dept="marketing" aria-pressed="true"><span class="legend-dot" style="background:var(--c-marketing)"></span>Marketing</button>
+  <button type="button" class="legend-item" data-dept="solutions" aria-pressed="true"><span class="legend-dot" style="background:var(--c-solutions)"></span>Education Solutions</button>
+  <div class="legend-sep" aria-hidden="true"></div>
+  <button type="button" class="legend-reset" id="legend-reset" title="Show all departments">All</button>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
@@ -955,11 +1109,14 @@ let idCounter = 0;
 root.each(d => { d.data._id = idCounter++; });
 
 root.each(d => {
-  if (d.children && d.depth >= 2) {
+  if (d.children && d.depth >= 1) {
     d._children = d.children;
     d.children = null;
   }
 });
+
+const ALL_DEPTS = ["executive", "learning", "technology", "operations", "marketing", "solutions"];
+const activeDepts = new Set(ALL_DEPTS);
 
 const tooltip = document.getElementById("tooltip");
 const searchBox = document.getElementById("search-box");
@@ -1028,7 +1185,7 @@ function update(source) {
     .style("opacity", 0)
     .on("click", (e, d) => {
       e.stopPropagation();
-      toggle(d);
+      focusNode(d);
     })
     .on("mouseenter", (e, d) => showTooltip(e, d))
     .on("mousemove", (e) => moveTooltip(e))
@@ -1128,7 +1285,11 @@ function update(source) {
     g.append("circle")
       .attr("class", "node-expand-hit")
       .attr("cx", 0).attr("cy", halfH + 14)
-      .attr("r", 22);
+      .attr("r", 22)
+      .on("click", (e, dd) => {
+        e.stopPropagation();
+        toggle(dd);
+      });
 
     g.append("text")
       .attr("class", "node-expand-icon")
@@ -1146,9 +1307,22 @@ function update(source) {
   const nodeUpdate = nodeEnter.merge(nodeSel);
 
   nodeUpdate
+    .classed("dept-dimmed", d => activeDepts.size < 6 && !activeDepts.has(d.data.dept));
+
+  nodeUpdate
     .transition().duration(400).ease(d3.easeCubicOut)
     .attr("transform", d => `translate(${d.x},${d.y})`)
-    .style("opacity", 1);
+    .style("opacity", function(d) {
+      if (activeDepts.size < 6 && !activeDepts.has(d.data.dept)) return 0.12;
+      return 1;
+    });
+
+  gLinks.selectAll(".link")
+    .classed("dept-dimmed", d =>
+      activeDepts.size < 6 &&
+      !activeDepts.has(d.target.data.dept) &&
+      !activeDepts.has(d.source.data.dept)
+    );
 
   nodeUpdate.select(".node-expand-icon")
     .text(d => d._children ? "+" : (d.children ? "−" : ""));
@@ -1373,6 +1547,7 @@ function selectSearchResult(idx) {
   setTimeout(() => {
     zoomToNode(d);
     update(root);
+    setHashForNode(d);
   }, 100);
   searchResults.classList.remove("visible");
   searchBox.setAttribute("aria-expanded", "false");
@@ -1404,9 +1579,313 @@ document.getElementById("btn-expand-all").addEventListener("click", () => {
   setTimeout(fitToScreen, 500);
 });
 document.getElementById("btn-collapse").addEventListener("click", () => {
-  collapseToLevel(root, 2);
+  collapseToLevel(root, 1);
   update(root);
   setTimeout(fitToScreen, 500);
+});
+
+// --- Focus (click node) ---
+function focusNode(d) {
+  if (d._children) {
+    d.children = d._children;
+    d._children = null;
+  }
+  buildFlatList().forEach(n => { n.data._highlighted = false; });
+  d.data._highlighted = true;
+  update(d);
+  setTimeout(() => {
+    zoomToNode(d);
+    setHashForNode(d);
+  }, 50);
+}
+
+// --- URL hash deep-linking ---
+function slugify(name) {
+  return String(name)
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+function nodeToSlug(d) {
+  if (d.data.name === "VACANCY") return "vacancy-" + slugify(d.data.title) + "-" + d.data._id;
+  return slugify(d.data.name);
+}
+function parseHash() {
+  const h = decodeURIComponent((location.hash || "").replace(/^#/, ""));
+  const params = {};
+  if (!h) return params;
+  h.split("&").forEach(p => {
+    const [k, v] = p.split("=");
+    if (v === undefined) params.person = k;
+    else params[k] = v;
+  });
+  return params;
+}
+let suppressHashWrite = false;
+function writeHash(params) {
+  const parts = [];
+  if (params.person) parts.push(encodeURIComponent(params.person));
+  if (params.filter) parts.push("filter=" + encodeURIComponent(params.filter));
+  const next = parts.length ? "#" + parts.join("&") : "";
+  if (next !== location.hash) {
+    suppressHashWrite = true;
+    history.replaceState(null, "", next || location.pathname + location.search);
+  }
+}
+function setHashForNode(d) {
+  const cur = parseHash();
+  writeHash({ person: nodeToSlug(d), filter: cur.filter });
+  if (d.data.name !== "VACANCY") {
+    document.title = `${d.data.name} — CAI Org Chart`;
+  }
+}
+function findNodeBySlug(slug) {
+  let found = null;
+  root.each(d => { if (!found && nodeToSlug(d) === slug) found = d; });
+  return found;
+}
+function applyHash() {
+  const params = parseHash();
+  if (params.filter) {
+    const depts = params.filter.split(",").filter(x => ALL_DEPTS.includes(x));
+    if (depts.length > 0 && depts.length < 6) {
+      activeDepts.clear();
+      depts.forEach(dd => activeDepts.add(dd));
+      syncLegendUI();
+    }
+  }
+  if (params.person) {
+    const d = findNodeBySlug(params.person);
+    if (d) {
+      expandPathTo(d);
+      clearHighlights();
+      d.data._highlighted = true;
+      update(d);
+      setTimeout(() => zoomToNode(d), 200);
+      return true;
+    }
+  }
+  return false;
+}
+window.addEventListener("hashchange", () => {
+  if (suppressHashWrite) { suppressHashWrite = false; return; }
+  applyHash();
+});
+
+// --- Department filter (legend) ---
+function syncLegendUI() {
+  document.querySelectorAll(".legend-item[data-dept]").forEach(btn => {
+    const on = activeDepts.has(btn.dataset.dept);
+    btn.classList.toggle("inactive", !on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+function updateFilterHash() {
+  const cur = parseHash();
+  const person = cur.person;
+  const isAll = activeDepts.size === 6;
+  writeHash({
+    person,
+    filter: isAll ? undefined : ALL_DEPTS.filter(d => activeDepts.has(d)).join(",")
+  });
+}
+function applyDeptFilter() {
+  syncLegendUI();
+  updateFilterHash();
+  updateHeadcount();
+  update(root);
+}
+document.querySelectorAll(".legend-item[data-dept]").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    const dept = btn.dataset.dept;
+    if (e.shiftKey || e.altKey) {
+      activeDepts.clear();
+      activeDepts.add(dept);
+    } else if (activeDepts.size === 6) {
+      activeDepts.clear();
+      activeDepts.add(dept);
+    } else if (activeDepts.has(dept)) {
+      activeDepts.delete(dept);
+      if (activeDepts.size === 0) ALL_DEPTS.forEach(d => activeDepts.add(d));
+    } else {
+      activeDepts.add(dept);
+    }
+    applyDeptFilter();
+  });
+});
+document.getElementById("legend-reset").addEventListener("click", () => {
+  activeDepts.clear();
+  ALL_DEPTS.forEach(d => activeDepts.add(d));
+  applyDeptFilter();
+});
+
+// --- Headcount ---
+function updateHeadcount() {
+  const all = [];
+  root.each(d => all.push(d));
+  const total = all.filter(d => d.data.name !== "VACANCY").length;
+  const vac = all.filter(d => d.data.name === "VACANCY").length;
+  const shown = activeDepts.size === 6
+    ? total
+    : all.filter(d => activeDepts.has(d.data.dept) && d.data.name !== "VACANCY").length;
+  const el = document.getElementById("headcount");
+  if (activeDepts.size === 6) {
+    el.innerHTML = `<strong>${total}</strong> people · <strong>${vac}</strong> open`;
+  } else {
+    el.innerHTML = `<strong>${shown}</strong> of ${total} shown`;
+  }
+}
+
+// --- Dark mode ---
+const themeBtn = document.getElementById("btn-theme");
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  themeBtn.querySelector(".icon-sun").style.display = theme === "dark" ? "none" : "";
+  themeBtn.querySelector(".icon-moon").style.display = theme === "dark" ? "" : "none";
+}
+function initTheme() {
+  const saved = localStorage.getItem("cai-theme");
+  if (saved === "dark" || saved === "light") {
+    applyTheme(saved);
+    return;
+  }
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(prefersDark ? "dark" : "light");
+}
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  const next = cur === "dark" ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem("cai-theme", next);
+});
+initTheme();
+
+// --- Print ---
+document.getElementById("btn-print").addEventListener("click", () => {
+  window.print();
+});
+
+// --- PNG Export ---
+function inlineSvgStyles(sourceSvg) {
+  const clone = sourceSvg.cloneNode(true);
+  const allEls = clone.querySelectorAll("*");
+  const sourceEls = sourceSvg.querySelectorAll("*");
+  const propsToCopy = [
+    "fill","stroke","stroke-width","stroke-dasharray","stroke-opacity",
+    "opacity","font-size","font-weight","font-family","font-style",
+    "text-anchor","dominant-baseline","filter","rx","ry"
+  ];
+  sourceEls.forEach((el, i) => {
+    const cs = getComputedStyle(el);
+    const target = allEls[i];
+    if (!target) return;
+    propsToCopy.forEach(p => {
+      const v = cs.getPropertyValue(p);
+      if (v && v !== "none" && v !== "auto" && v !== "normal") {
+        target.style.setProperty(p, v);
+      }
+    });
+  });
+  return clone;
+}
+document.getElementById("btn-export").addEventListener("click", async () => {
+  const btn = document.getElementById("btn-export");
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span>Exporting…</span>`;
+  try {
+    const bounds = gMain.node().getBBox();
+    const pad = 40;
+    const w = Math.max(bounds.width + pad * 2, 600);
+    const h = Math.max(bounds.height + pad * 2, 400);
+    const scale = 2;
+
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const bg = isDark ? "#0B1220" : "#FFFFFF";
+
+    const clone = inlineSvgStyles(svgEl.node());
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.setAttribute("width", w);
+    clone.setAttribute("height", h);
+    clone.setAttribute("viewBox", `${bounds.x - pad} ${bounds.y - pad} ${w} ${h}`);
+
+    const gMainClone = clone.querySelector("g");
+    if (gMainClone) gMainClone.removeAttribute("transform");
+
+    clone.querySelectorAll(".node-group.dept-dimmed").forEach(n => n.remove());
+    clone.querySelectorAll(".link.dept-dimmed").forEach(n => n.remove());
+    clone.querySelectorAll(".node-avatar-img").forEach(n => n.remove());
+
+    clone.querySelectorAll(".node-group").forEach(g => {
+      if (g.querySelector(".node-avatar-fallback")) return;
+      const cp = g.querySelector("clipPath circle");
+      if (!cp) return;
+      const cx = cp.getAttribute("cx");
+      const cy = cp.getAttribute("cy");
+      const r = cp.getAttribute("r");
+      const nameEl = g.querySelector(".node-name");
+      const name = nameEl ? nameEl.textContent : "";
+      const initials = name.split(/\s+/).filter(Boolean).slice(0,2).map(s => s[0].toUpperCase()).join("");
+      const ns = "http://www.w3.org/2000/svg";
+      const c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
+      c.setAttribute("fill", "#E2E8F0");
+      c.setAttribute("stroke", "#CBD5E1");
+      g.insertBefore(c, g.querySelector(".node-avatar-ring") || null);
+      const t = document.createElementNS(ns, "text");
+      t.setAttribute("x", cx); t.setAttribute("y", cy);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("dominant-baseline", "central");
+      t.style.fontSize = "14px";
+      t.style.fontWeight = "600";
+      t.style.fill = "#64748B";
+      t.textContent = initials;
+      g.insertBefore(t, g.querySelector(".node-avatar-ring") || null);
+    });
+
+    const xml = new XMLSerializer().serializeToString(clone);
+    const svgBlob = new Blob([
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      xml
+    ], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.decoding = "sync";
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+
+    const filterLabel = activeDepts.size === 6 ? "all" : ALL_DEPTS.filter(d => activeDepts.has(d)).join("-");
+    const dt = new Date().toISOString().slice(0,10);
+    const filename = `cai-orgchart-${filterLabel}-${dt}.png`;
+
+    canvas.toBlob(blob => {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(link.href);
+        link.remove();
+      }, 100);
+    }, "image/png");
+  } catch (err) {
+    console.error("Export failed:", err);
+    alert("Export failed. Try 'Print' and save as PDF instead.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
 });
 
 // Minimap
@@ -1457,8 +1936,12 @@ document.addEventListener("keydown", (e) => {
 });
 
 // Init
+const hadDeepLink = applyHash();
+updateHeadcount();
 update(root);
-setTimeout(fitToScreen, 100);
+setTimeout(() => {
+  if (!hadDeepLink) fitToScreen();
+}, 100);
 
 let resizeTimer;
 window.addEventListener("resize", () => {
