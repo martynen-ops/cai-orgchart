@@ -35,45 +35,49 @@
   -->
   <style>
     :root {
-      --bg: #F4F6F9;
+      --bg: #F5F7FA;
       --surface: #FFFFFF;
-      --surface-2: #F8FAFC;
-      --text-1: #0D1823;
-      --text-2: #4A5568;
-      --text-3: #6B7B8D;
-      --border: #E2E8F0;
-      --link-color: #94A3B8;
-      --hover-bg: #EEF2FF;
-      --hover-border: #C7D2FE;
-      --toolbar-bg: rgba(244,246,249,0.85);
-      --legend-bg: rgba(255,255,255,0.92);
-      --search-hit: #F0F4FF;
+      --surface-2: #F4F7FB;
+      --text-1: #0A1F3D;
+      --text-2: #394A63;
+      --text-3: #6B7A90;
+      --border: #DCE3EC;
+      --link-color: #A6B2C4;
+      --hover-bg: #EAF0F8;
+      --hover-border: #B9CCE3;
+      --toolbar-bg: rgba(245,247,250,0.88);
+      --legend-bg: rgba(255,255,255,0.94);
+      --search-hit: #FFF7D6;
 
-      --c-executive: #6366F1;
-      --c-learning: #0EA5E9;
-      --c-technology: #10B981;
-      --c-operations: #F59E0B;
-      --c-marketing: #EC4899;
-      --c-solutions: #8B5CF6;
+      --um-blue: #00274C;
+      --um-maize: #FFCB05;
+      --um-maize-ink: #B68D00;
+
+      --c-executive: #00274C;
+      --c-learning: #2F65A7;
+      --c-technology: #75988D;
+      --c-operations: #D86018;
+      --c-marketing: #B68D00;
+      --c-solutions: #6B4C7A;
 
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       --ease: cubic-bezier(.4,0,.2,1);
     }
 
     [data-theme="dark"] {
-      --bg: #0B1220;
-      --surface: #1A2435;
-      --surface-2: #131C2B;
-      --text-1: #F1F5F9;
-      --text-2: #CBD5E1;
-      --text-3: #94A3B8;
-      --border: #2B394F;
-      --link-color: #475569;
-      --hover-bg: #1E2A44;
-      --hover-border: #3B4B6B;
-      --toolbar-bg: rgba(11,18,32,0.85);
-      --legend-bg: rgba(26,36,53,0.92);
-      --search-hit: #1E2A44;
+      --bg: #071A30;
+      --surface: #0F2A4A;
+      --surface-2: #0B2340;
+      --text-1: #EEF3FA;
+      --text-2: #C4D2E4;
+      --text-3: #8AA1BF;
+      --border: #1E3A5F;
+      --link-color: #3C597E;
+      --hover-bg: #133457;
+      --hover-border: #2B527E;
+      --toolbar-bg: rgba(7,26,48,0.88);
+      --legend-bg: rgba(15,42,74,0.94);
+      --search-hit: #3A2F00;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -151,8 +155,8 @@
       transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
     }
     #search-box:focus {
-      border-color: var(--c-executive);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+      border-color: var(--um-blue);
+      box-shadow: 0 0 0 3px rgba(255,203,5,0.35);
     }
     #search-box::placeholder { color: var(--text-3); }
 
@@ -205,7 +209,7 @@
       margin-top: 2px;
     }
     .search-result-item mark {
-      background: rgba(99,102,241,0.2);
+      background: rgba(255,203,5,0.45);
       color: inherit;
       border-radius: 2px;
       padding: 0 1px;
@@ -237,7 +241,7 @@
     }
     .btn-icon:active { transform: scale(0.95); }
     .btn-icon:focus-visible, .btn-text:focus-visible {
-      outline: 2px solid var(--c-executive);
+      outline: 2px solid var(--um-maize);
       outline-offset: 2px;
     }
 
@@ -406,8 +410,8 @@
       width: 100%; height: 100%;
     }
     .minimap-viewport {
-      fill: rgba(99,102,241,0.08);
-      stroke: var(--c-executive);
+      fill: rgba(255,203,5,0.12);
+      stroke: var(--um-blue);
       stroke-width: 1.5;
     }
     .minimap-node { transition: fill 200ms var(--ease); }
@@ -529,7 +533,7 @@
       border-color: var(--hover-border);
     }
     .legend-item:focus-visible {
-      outline: 2px solid var(--c-executive);
+      outline: 2px solid var(--um-maize);
       outline-offset: 2px;
     }
     .legend-item.inactive {
@@ -1011,12 +1015,12 @@ const ORG_DATA = {
 };
 
 const DEPT_COLORS = {
-  executive: "#6366F1",
-  learning: "#0EA5E9",
-  technology: "#10B981",
-  operations: "#F59E0B",
-  marketing: "#EC4899",
-  solutions: "#8B5CF6"
+  executive: "#00274C",
+  learning: "#2F65A7",
+  technology: "#75988D",
+  operations: "#D86018",
+  marketing: "#B68D00",
+  solutions: "#6B4C7A"
 };
 
 const DEPT_LABELS = {
@@ -1962,7 +1966,7 @@ async function renderChartPng({ subtreeRoot } = {}) {
   const scale = 2;
 
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-  const bg = isDark ? "#0B1220" : "#FFFFFF";
+  const bg = isDark ? "#071A30" : "#FFFFFF";
 
   const clone = inlineSvgStyles(svgEl.node());
   clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -2109,7 +2113,7 @@ async function printScope(subtreeRoot) {
       @page { size: landscape; margin: 0.5in; }
       html, body { margin: 0; padding: 0; background: #fff; font-family: -apple-system, system-ui, sans-serif; }
       .wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
-      h1 { font-size: 16px; color: #0D1823; margin: 0 0 12px; font-weight: 600; }
+      h1 { font-size: 16px; color: #00274C; margin: 0 0 12px; font-weight: 600; }
       img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; }
       @media print { h1 { display: none; } .wrap { min-height: auto; padding: 0; } }
     </style></head>
