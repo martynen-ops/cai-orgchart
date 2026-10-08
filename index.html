@@ -82,6 +82,8 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    .team-group .node-card { stroke-dasharray: 5 3; }
+
     .sr-only {
       position: absolute; width: 1px; height: 1px;
       padding: 0; margin: -1px; overflow: hidden;
@@ -855,54 +857,68 @@ const ORG_DATA = {
             { name: "VACANCY", title: "Software Development Lead", dept: "technology" },
             { name: "Jingcong Hu", title: "Software Developer", dept: "technology" },
             { name: "Michael Wheeler", title: "Application Architect", dept: "technology" },
-            { name: "Moeezo Saleem", title: "XR Developer Senior", dept: "technology" },
-            { name: "Eric Schreffler", title: "XR Developer Lead", dept: "technology" },
-            { name: "Ray Majewski", title: "XR Environmental Artist", dept: "technology" }
+            { name: "Moeezo Saleem", title: "XR Developer Senior", dept: "technology", scope: "Leads XR initiatives, excluding Virtual Production." }
           ]
         },
         {
           name: "Marina Martynenko", title: "Director of Technology Infrastructure and Support", dept: "technology",
           children: [
             { name: "Eric Oblander", title: "Technical Production Specialist Senior", dept: "technology" },
-            { name: "Daniel Joyce", title: "Media Solutions Engineer", dept: "technology" },
+            { name: "Daniel Joyce", title: "Media Systems Engineer Lead", dept: "technology" },
             { name: "Jessica Van Fleteren", title: "Media Systems Engineer", dept: "technology" },
             { name: "Patrik Holubik", title: "Technical Project Manager", dept: "technology" },
-            { name: "Kowshik Vooda", title: "DevOps Engineer", dept: "technology" }
+            { name: "VACANCY", title: "DevOps Engineer", dept: "technology" }
           ]
         },
         {
           name: "Jerry Anderfuren", title: "Director of Creative Studios", dept: "technology",
           children: [
             {
-              name: "Jeffrey Butler II", title: "Media Design and Production Lead", dept: "technology",
+              name: "Media Design", title: "Creative Studios team", dept: "technology", kind: "group",
               children: [
-                { name: "Ben Corona", title: "Media Designer Senior", dept: "technology" },
-                { name: "J'Vion Armstrong", title: "Media Designer Senior", dept: "technology" },
-                { name: "Kameron Donald", title: "Media Designer Senior", dept: "technology" },
-                { name: "Violet Gray", title: "Media Designer", dept: "technology" }
+                {
+                  name: "Jeffrey Butler II", title: "Media Design and Production Lead", dept: "technology",
+                  children: [
+                    { name: "Ben Corona", title: "Media Designer Senior", dept: "technology" },
+                    { name: "J'Vion Armstrong", title: "Media Designer Senior", dept: "technology" },
+                    { name: "Kameron Donald", title: "Media Designer Senior", dept: "technology" },
+                    { name: "Violet Gray", title: "Media Designer", dept: "technology" }
+                  ]
+                },
+                {
+                  name: "Micah Vanderhoof", title: "Media Design and Production Lead", dept: "technology",
+                  children: [
+                    { name: "Alfredo Guevara", title: "Media Designer Senior", dept: "technology" },
+                    { name: "Allie Krueger", title: "Media Designer Senior", dept: "technology" },
+                    { name: "Tim McMahon", title: "Media Designer Senior", dept: "technology" },
+                    { name: "Andre' Barbour", title: "Media Designer Senior", dept: "technology" }
+                  ]
+                }
               ]
             },
             {
-              name: "Micah Vanderhoof", title: "Media Design and Production Lead", dept: "technology",
+              name: "Martin Thoburn", title: "Media Technology and Production Lead", dept: "technology",
               children: [
-                { name: "Alfredo Guevara", title: "Media Designer Senior", dept: "technology" },
-                { name: "Allie Krueger", title: "Media Designer Senior", dept: "technology" },
-                { name: "Tim McMahon", title: "Media Designer Senior", dept: "technology" }
+                { name: "Ray Majewski", title: "XR Environmental Artist", dept: "technology" }
               ]
             },
             {
-              name: "Martin Thoburn", title: "Media Design and Production Lead", dept: "technology",
-              children: [
-                { name: "Andre' Barbour", title: "Media Designer", dept: "technology" }
-              ]
-            },
-            {
-              name: "Sam Baldwin", title: "Multimedia Producer Lead", dept: "technology",
+              name: "Sam Baldwin", title: "Multimedia Production Lead", dept: "technology", scope: "Oversees the Media Production Team.",
               children: [
                 { name: "Eric Shalayko", title: "Multimedia Marketing Producer", dept: "technology" },
                 { name: "Chiemela Mgbeahuru", title: "Virtual Production Producer", dept: "technology" }
               ]
-            }
+            },
+            { name: "Eric Schreffler", title: "XR Developer Lead", dept: "technology" }
+          ]
+        },
+        {
+          name: "Vimal Agarwal", title: "Director of Business Intelligence and Data Infrastructure", dept: "technology",
+          children: [
+            { name: "VACANCY", title: "Data Engineering Lead", dept: "technology" },
+            { name: "Anamta Khan", title: "Data Engineer", dept: "technology" },
+            { name: "Yukti Mittal", title: "Operations Data Analyst", dept: "technology" },
+            { name: "Victor Wong", title: "Product Manager of Data and Business Intelligence", dept: "technology" }
           ]
         },
         {
@@ -948,16 +964,7 @@ const ORG_DATA = {
           ]
         },
         { name: "Roderick Simmons", title: "Associate Director of Student Experience and Engagement", dept: "operations" },
-        { name: "Jack Bernard", title: "Associate General Counsel", dept: "operations" },
-        {
-          name: "Vimal Agarwal", title: "Director of Business Intelligence and Data Infrastructure", dept: "operations",
-          children: [
-            { name: "VACANCY", title: "Data Engineering Lead", dept: "operations" },
-            { name: "Anamta Khan", title: "Data Engineer", dept: "operations" },
-            { name: "Yukti Mittal", title: "Operations Data Analyst", dept: "operations" },
-            { name: "Victor Wong", title: "Product Manager of Data and Business Intelligence", dept: "operations" }
-          ]
-        }
+        { name: "Jack Bernard", title: "Associate General Counsel", dept: "operations" }
       ]
     },
     {
@@ -1189,12 +1196,19 @@ const tooltip = document.getElementById("tooltip");
 const searchBox = document.getElementById("search-box");
 const searchResults = document.getElementById("search-results");
 
+function isPerson(d) {
+  return d.data.kind !== "group" && d.data.name !== "VACANCY";
+}
+
 function countDescendants(d) {
-  if (!d._children && !d.children) return 0;
-  let kids = d._children || d.children || [];
-  let count = kids.length;
-  kids.forEach(c => { count += countDescendants(c); });
-  return count;
+  return (d.children || d._children || []).reduce(
+    (count, child) => count + (isPerson(child) ? 1 : 0) + countDescendants(child), 0);
+}
+
+// Team headings are organizational groupings, not additional supervisors.
+function directReports(d) {
+  return (d.children || d._children || []).flatMap(child =>
+    child.data.kind === "group" ? directReports(child) : (isPerson(child) ? [child] : []));
 }
 
 function truncate(text, maxLen) {
@@ -1247,7 +1261,7 @@ function update(source) {
 
   const nodeEnter = nodeSel.enter()
     .append("g")
-    .attr("class", d => `node-group ${d.data.name === "VACANCY" ? "vacancy" : ""}`)
+    .attr("class", d => `node-group ${d.data.name === "VACANCY" ? "vacancy" : ""} ${d.data.kind === "group" ? "team-group" : ""}`)
     .attr("transform", `translate(${source.x},${source.y})`)
     .style("opacity", 0)
     .on("click", (e, d) => {
@@ -1296,7 +1310,7 @@ function update(source) {
       .attr("class", "node-avatar-initials")
       .attr("x", avatarCX).attr("y", avatarCY)
       .attr("fill", d.data.name === "VACANCY" ? "#64748B" : DEPT_COLORS[d.data.dept])
-      .text(getInitials(d.data.name));
+      .text(d.data.kind === "group" ? "▦" : getInitials(d.data.name));
   }
 
   nodeEnter.each(function(d) {
@@ -1445,8 +1459,7 @@ function esc(str) {
 }
 
 function showTooltip(e, d) {
-  const kids = d.children || d._children || [];
-  const direct = kids.length;
+  const direct = directReports(d).length;
   const total = countDescendants(d);
   const indirect = total - direct;
   const imgUrl = STAFF_IMAGES[d.data.name];
@@ -1456,7 +1469,9 @@ function showTooltip(e, d) {
     ? `<div class="tooltip-photo"><img src="${displayImageUrl(imgUrl, 160)}" alt="${name}" /></div>`
     : "";
   let reportsHtml = "";
-  if (total > 0) {
+  if (d.data.kind === "group") {
+    reportsHtml = `<div class="tooltip-reports">${total} people in this team</div>`;
+  } else if (total > 0) {
     const label = total === 1 ? "report" : "reports";
     reportsHtml = indirect > 0
       ? `<div class="tooltip-reports">${total} ${label} (${direct} direct + ${indirect} indirect)</div>`
@@ -1466,6 +1481,7 @@ function showTooltip(e, d) {
     ${photoHtml}
     <div class="tooltip-name">${name}</div>
     <div class="tooltip-title">${title}</div>
+    ${d.data.scope ? `<div class="tooltip-title">${esc(d.data.scope)}</div>` : ""}
     <span class="tooltip-dept" style="background:${DEPT_COLORS[d.data.dept]}">${DEPT_LABELS[d.data.dept]}</span>
     ${reportsHtml}
   `;
@@ -1554,10 +1570,10 @@ searchBox.addEventListener("input", () => {
     return;
   }
   const flat = buildFlatList();
-  searchResultNodes = flat.filter(d =>
+  searchResultNodes = flat.filter(d => d.data.kind !== "group" && (
     d.data.name.toLowerCase().includes(q.toLowerCase()) ||
     d.data.title.toLowerCase().includes(q.toLowerCase())
-  );
+  ));
   activeResultIdx = -1;
 
   if (searchResultNodes.length === 0) {
@@ -1808,11 +1824,11 @@ function updateHeadcount() {
     all.push(d);
     (d.children || d._children || []).forEach(walk);
   })(root);
-  const total = all.filter(d => d.data.name !== "VACANCY").length;
+  const total = all.filter(isPerson).length;
   const vac = all.filter(d => d.data.name === "VACANCY").length;
   const shown = activeDepts.size === 6
     ? total
-    : all.filter(d => activeDepts.has(d.data.dept) && d.data.name !== "VACANCY").length;
+    : all.filter(d => activeDepts.has(d.data.dept) && isPerson(d)).length;
   const el = document.getElementById("headcount");
   if (activeDepts.size === 6) {
     el.innerHTML = `<strong>${total}</strong> people · <strong>${vac}</strong> open`;
@@ -2137,14 +2153,14 @@ let focusedNode = null;
 
 function countVisibleDescendants(d) {
   if (!d.children) return 0;
-  let c = d.children.length;
+  let c = d.children.filter(isPerson).length;
   d.children.forEach(ch => c += countVisibleDescendants(ch));
   return c;
 }
 function refreshFocusBarCount() {
   if (!focusedNode) return;
-  const visible = countVisibleDescendants(focusedNode) + 1;
-  const total = countDescendants(focusedNode) + 1;
+  const visible = countVisibleDescendants(focusedNode) + (isPerson(focusedNode) ? 1 : 0);
+  const total = countDescendants(focusedNode) + (isPerson(focusedNode) ? 1 : 0);
   focusBarCount.textContent = visible === total
     ? `· ${visible} people`
     : `· ${visible} of ${total} shown`;
